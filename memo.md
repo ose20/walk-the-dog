@@ -1,0 +1,2 @@
+
+- trimしてないrhb.jsonを見ると、こっちの方がwidthやheightがちゃんとでかくなってる
