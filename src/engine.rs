@@ -12,7 +12,7 @@ use futures::channel::{
 };
 use serde::Deserialize;
 use wasm_bindgen::{prelude::Closure, JsCast, JsValue};
-use web_sys::{AudioBuffer, AudioContext, CanvasRenderingContext2d, HtmlImageElement};
+use web_sys::{AudioBuffer, AudioContext, CanvasRenderingContext2d, HtmlElement, HtmlImageElement};
 
 #[derive(Deserialize, Clone)]
 // シリアライズ時の挙動（デシリアライズは逆になる）
@@ -382,4 +382,16 @@ impl Audio {
     pub fn play_looping_sound(&self, sound: &Sound) -> Result<()> {
         sound::play_sound(&self.context, &sound.buffer, sound::LOOPING::YES)
     }
+}
+
+pub fn add_click_handler(elem: HtmlElement) -> UnboundedReceiver<()> {
+    let (mut click_sender, click_receiver) = unbounded();
+    let on_click = browser::closure_wrap(Box::new(move || {
+        let _ = click_sender.start_send(());
+    }) as Box<dyn FnMut()>);
+
+    elem.set_onclick(Some(on_click.as_ref().unchecked_ref()));
+    on_click.forget();
+
+    click_receiver
 }
