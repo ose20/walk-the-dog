@@ -201,11 +201,13 @@ impl Game for WalkTheDog {
                     engine::load_image("tiles.png").await?,
                 ));
 
-                //let audio = Audio::new()?;
-                //let sound = audio.load_sound("SFX_Jump_23.mp3").await?;
+                let audio = Audio::new()?;
+                let sound = audio.load_sound("SFX_Jump_23.mp3").await?;
                 let rhb = RedHatBoy::new(
                     json.into_serde::<Sheet>()?,
                     engine::load_image("rhb.png").await?,
+                    audio,
+                    sound,
                 );
 
                 let background_width = background.width() as i16;
@@ -334,9 +336,9 @@ pub struct RedHatBoy {
 }
 
 impl RedHatBoy {
-    fn new(sheet: Sheet, image: HtmlImageElement) -> Self {
+    fn new(sheet: Sheet, image: HtmlImageElement, audio: Audio, jump_sound: Sound) -> Self {
         RedHatBoy {
-            state_machine: RedHatBoyStateMachine::Idle(RedHatBoyState::new()),
+            state_machine: RedHatBoyStateMachine::Idle(RedHatBoyState::new(audio, jump_sound)),
             sprite_sheet: sheet,
             image,
         }
@@ -440,7 +442,7 @@ impl RedHatBoy {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone)]
 enum RedHatBoyStateMachine {
     Idle(RedHatBoyState<Idle>),
     Running(RedHatBoyState<Running>),
@@ -589,7 +591,7 @@ mod red_hat_boy_states {
     #[derive(Clone, Copy)]
     pub struct KnockedOut;
 
-    #[derive(Clone, Copy)]
+    #[derive(Clone)]
     pub struct RedHatBoyState<S> {
         context: RedHatBoyContext,
         _state: S,
@@ -604,7 +606,7 @@ mod red_hat_boy_states {
     // これがタイプステートパターンなのかな？
     // すごい、Idleの部分が値みたいな直観があるせいで、依存型に見える
     impl RedHatBoyState<Idle> {
-        pub fn new() -> Self {
+        pub fn new(audio: Audio, jump_sound: Sound) -> Self {
             RedHatBoyState {
                 context: RedHatBoyContext {
                     frame: 0,
@@ -613,6 +615,8 @@ mod red_hat_boy_states {
                         y: FLOOR,
                     },
                     velocity: Point { x: 0, y: 0 },
+                    audio,
+                    jump_sound,
                 },
                 _state: Idle {},
             }
@@ -654,8 +658,11 @@ mod red_hat_boy_states {
 
         pub fn jump(self) -> RedHatBoyState<Jumping> {
             RedHatBoyState {
-                context: self.context.set_vertical_velocity(JUMP_SPEED).reset_frame(),
-                //.play_jump_sound(),
+                context: self
+                    .context
+                    .set_vertical_velocity(JUMP_SPEED)
+                    .reset_frame()
+                    .play_jump_sound(),
                 _state: Jumping {},
             }
         }
@@ -822,11 +829,13 @@ mod red_hat_boy_states {
         }
     }
 
-    #[derive(Clone, Copy)]
+    #[derive(Clone)]
     pub struct RedHatBoyContext {
         pub frame: u8,
         pub position: Point,
         pub velocity: Point,
+        audio: Audio,
+        jump_sound: Sound,
     }
 
     impl RedHatBoyContext {
@@ -896,11 +905,11 @@ mod red_hat_boy_states {
             self
         }
 
-        //fn play_jump_sound(self) -> Self {
-        //    if let Err(err) = self.audio.play_sound(&self.jump_sound) {
-        //        log!("Error playing jump sound {:#?}", err);
-        //    }
-        //    self
-        //}
+        fn play_jump_sound(self) -> Self {
+            if let Err(err) = self.audio.play_sound(&self.jump_sound) {
+                log!("Error playing jump sound {:#?}", err);
+            }
+            self
+        }
     }
 }

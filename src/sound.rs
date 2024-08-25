@@ -4,7 +4,6 @@ use wasm_bindgen::JsCast;
 use wasm_bindgen_futures::JsFuture;
 use web_sys::{AudioBuffer, AudioBufferSourceNode, AudioContext, AudioDestinationNode, AudioNode};
 
-
 pub fn create_audio_context() -> Result<AudioContext> {
     AudioContext::new().map_err(|err| anyhow!("Could not create audio context: {:#?}", err))
 }
