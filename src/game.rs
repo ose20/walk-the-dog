@@ -177,7 +177,6 @@ impl WalkTheDogState<Walking> {
             .map(|element| engine::add_click_handler(element))
             .unwrap();
 
-        browser::draw_ui("<button>New Game</button>");
         WalkTheDogState {
             _state: GameOver {
                 new_game_event: receiver,
