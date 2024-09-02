@@ -16,6 +16,13 @@ macro_rules! log {
     };
 }
 
+macro_rules! error {
+    ( $( $t:tt )* ) => {
+        web_sys::console::error_1(&format!( $( $t )* ).into());
+
+    };
+}
+
 pub fn window() -> Result<Window> {
     web_sys::window().ok_or_else(|| anyhow!("No Window Found"))
 }
@@ -166,4 +173,19 @@ pub fn find_html_element_by_id(id: &str) -> Result<HtmlElement> {
                 .dyn_into::<HtmlElement>()
                 .map_err(|err| anyhow!("Could not cast into HtmlElement {:#?}", err))
         })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use wasm_bindgen_test::{wasm_bindgen_test, wasm_bindgen_test_configure};
+
+    wasm_bindgen_test_configure!(run_in_browser);
+
+    #[wasm_bindgen_test]
+    async fn test_error_loading_json() {
+        let json = fetch_json("not_there.json").await;
+
+        assert_eq!(json.is_err(), true);
+    }
 }

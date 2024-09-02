@@ -23,7 +23,7 @@ lto = true
 [dependencies]
 # The `wasm-bindgen` crate provides the bare minimum functionality needed
 # to interact with JavaScript.
-wasm-bindgen = {version = "0.2.78"}
+wasm-bindgen = {version = "0.2.78" }
 console_error_panic_hook = "0.1.7"
 rand = "0.8.4"
 getrandom = { version = "0.2.3", features = ["js"] }
